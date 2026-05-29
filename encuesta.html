@@ -323,10 +323,10 @@ textarea:focus { border-color: #b52a1c; }
     try {
       const snap = await getDoc(doc(db, 'clientes', wa));
       document.getElementById('loading0').style.display = 'none';
-      if (snap.exists()) {
+      if (snap.exists() && snap.data().cupon) {
         const data = snap.data();
         const codigo = data.cupon || '';
-        const usado = data.cupon_usado || false;
+        const usado = data.cupon_usado === true;
         const fechaReg = data.fecha_registro?.toDate ? data.fecha_registro.toDate() : null;
         const vencido = fechaReg ? (new Date() - fechaReg) / (1000 * 60 * 60 * 24) > VIGENCIA_DIAS : false;
         if (usado) {
