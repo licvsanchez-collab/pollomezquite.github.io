@@ -209,7 +209,7 @@ textarea:focus { border-color: #b52a1c; }
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCwvRTP0C2IrYk3sEwJI_8xbQgYYEKuO9w",
@@ -329,9 +329,8 @@ textarea:focus { border-color: #b52a1c; }
         const usado = data.cupon_usado || false;
         const fechaReg = data.fecha_registro?.toDate ? data.fecha_registro.toDate() : null;
         const vencido = fechaReg ? (new Date() - fechaReg) / (1000 * 60 * 60 * 24) > VIGENCIA_DIAS : false;
-
         if (usado) {
-          document.getElementById('dup-estado').innerHTML = 'Ya completaste nuestra encuesta y tu cupón de descuento <strong>ya fue canjeado</strong>. ¡Gracias por tu preferencia!';
+          document.getElementById('dup-estado').innerHTML = 'Ya completaste nuestra encuesta y tu cupón <strong>ya fue canjeado</strong>. ¡Gracias por tu preferencia!';
           document.getElementById('btn-whats-dup').style.display = 'none';
         } else if (vencido) {
           document.getElementById('dup-estado').innerHTML = 'Ya completaste nuestra encuesta pero tu cupón <strong>ha vencido</strong> (válido 30 días). Acércate al mostrador si tienes dudas.';
