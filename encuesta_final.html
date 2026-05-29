@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Pollo Mezquite — Encuesta de satisfacción</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f0e8; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; }
+.card { background: #fff; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); max-width: 520px; width: 100%; padding: 2rem; }
+.header { text-align: center; margin-bottom: 1.5rem; }
+.logo-wrap { margin: 0 auto 0.75rem; width: 110px; height: 110px; }
+.logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+h1 { font-size: 20px; font-weight: 700; color: #b52a1c; margin-bottom: 4px; }
+.sub { font-size: 14px; color: #888; }
+.progress-wrap { margin-bottom: 1.5rem; }
+.progress-bg { height: 5px; background: #f0e0d0; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #b52a1c, #e8a020); border-radius: 3px; transition: width 0.4s ease; }
+.progress-txt { font-size: 12px; color: #bbb; text-align: right; margin-top: 5px; }
+.step { display: none; }
+.step.active { display: block; }
+.q { font-size: 16px; font-weight: 600; color: #1a1a1a; margin-bottom: 0.4rem; line-height: 1.4; }
+.hint { font-size: 13px; color: #aaa; margin-bottom: 1.1rem; }
+input[type=text], input[type=tel] { width: 100%; padding: 11px 14px; border: 1.5px solid #e0d0c8; border-radius: 9px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fff; margin-bottom: 1rem; outline: none; transition: border-color 0.15s; }
+input:focus { border-color: #b52a1c; }
+.stars { display: flex; gap: 8px; margin-bottom: 0.4rem; }
+.star { font-size: 38px; cursor: pointer; color: #e0d0c0; transition: color 0.12s, transform 0.1s; line-height: 1; user-select: none; }
+.star.on { color: #e8a020; }
+.star:active { transform: scale(1.15); }
+.star-lbl { font-size: 13px; color: #b52a1c; font-weight: 600; min-height: 20px; margin-bottom: 1.1rem; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.1rem; }
+.opt { padding: 9px 16px; border-radius: 9px; border: 1.5px solid #e0d0c8; font-size: 14px; cursor: pointer; background: #fff; color: #333; transition: all 0.15s; }
+.opt:hover { border-color: #b52a1c; background: #fdf0ec; }
+.opt.sel { border-color: #b52a1c; background: #fdf0ec; color: #8b1e14; font-weight: 600; }
+.nps-btns { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 0.4rem; }
+.nps-btn { width: 44px; height: 44px; border-radius: 9px; border: 1.5px solid #e0d0c8; font-size: 15px; cursor: pointer; background: #fff; color: #333; font-weight: 600; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.nps-btn:hover { border-color: #b52a1c; background: #fdf0ec; }
+.nps-btn.sel { background: #b52a1c; color: #fff; border-color: #b52a1c; }
+.nps-labels { display: flex; justify-content: space-between; font-size: 11px; color: #bbb; margin-bottom: 1.1rem; }
+textarea { width: 100%; min-height: 80px; resize: vertical; border-radius: 9px; border: 1.5px solid #e0d0c8; padding: 10px 12px; font-size: 14px; font-family: inherit; color: #333; background: #fff; margin-bottom: 1.1rem; outline: none; transition: border-color 0.15s; }
+textarea:focus { border-color: #b52a1c; }
+.btn-next { width: 100%; padding: 13px; background: #b52a1c; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; letter-spacing: 0.3px; }
+.btn-next:hover { background: #951f14; }
+.btn-next:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
+.btn-back { background: none; border: none; color: #bbb; font-size: 13px; cursor: pointer; padding: 10px 0 0; display: flex; align-items: center; gap: 3px; }
+.btn-back:hover { color: #666; }
+.privacy { background: #fdf8f0; border-left: 3px solid #e8a020; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #888; line-height: 1.6; margin-bottom: 1.1rem; }
+.coupon-screen { text-align: center; padding: 0.5rem 0; }
+.check-icon { font-size: 52px; margin-bottom: 0.5rem; }
+.thanks-title { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 0.4rem; }
+.thanks-sub { font-size: 14px; color: #888; margin-bottom: 1.5rem; }
+.coupon-box { border: 2.5px dashed #b52a1c; border-radius: 14px; padding: 1.5rem; margin-bottom: 1rem; background: #fff9f5; }
+.coupon-pct { font-size: 58px; font-weight: 700; color: #b52a1c; line-height: 1; }
+.coupon-desc { font-size: 15px; color: #555; margin-top: 6px; }
+.coupon-code-wrap { margin-top: 1rem; font-size: 13px; color: #aaa; }
+.coupon-code { font-size: 26px; font-weight: 700; letter-spacing: 5px; color: #1a1a1a; display: block; margin-top: 6px; background: #f5f0e8; border-radius: 8px; padding: 8px; }
+.coupon-note { font-size: 12px; color: #bbb; margin-top: 1rem; line-height: 1.5; }
+.error-msg { font-size: 13px; color: #b52a1c; margin-top: -0.5rem; margin-bottom: 0.8rem; display: none; }
+.loading { text-align: center; padding: 2rem; color: #aaa; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="header">
+    <div class="logo-wrap">
+      <img src="logo_alta_resolución_RGB.png" alt="El Pollo Mezquite" onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'">
+      <div id="logo-fallback" style="display:none; width:90px; height:90px; border-radius:50%; background:#b52a1c; align-items:center; justify-content:center; margin:0 auto; font-size:36px;">🍗</div>
+    </div>
+    <h1>El Pollo Mezquite</h1>
+    <p class="sub">Tu opinión nos ayuda a mejorar · Completa la encuesta y obtén un descuento</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bg"><div class="progress-fill" id="pbar" style="width:0%"></div></div>
+    <p class="progress-txt" id="ptxt"></p>
+  </div>
+
+  <!-- PASO 0: Registro -->
+  <div class="step active" id="s0">
+    <p class="q">Antes de comenzar, ¿cómo te llamas?</p>
+    <input type="text" id="nombre" placeholder="Tu nombre" oninput="checkReg()">
+    <p class="q">¿Cuál es tu número de WhatsApp?</p>
+    <p class="hint">Con este número evitamos duplicados y te contactamos solo si lo autorizas</p>
+    <input type="tel" id="whatsapp" placeholder="Ej. 8112345678" oninput="checkReg()">
+    <p id="err-reg" class="error-msg">Por favor ingresa nombre y número válido (10 dígitos)</p>
+    <p class="q" style="margin-bottom:0.6rem">¿Deseas recibir promociones y ofertas por WhatsApp?</p>
+    <div class="opts" id="opts-promo">
+      <div class="opt" data-val="true">Sí, me interesa</div>
+      <div class="opt" data-val="false">No por ahora</div>
+    </div>
+    <div class="privacy">
+      Tus datos serán utilizados únicamente por El Pollo Mezquite para mejorar nuestro servicio y, si lo autorizaste, enviarte promociones. No compartimos tu información con terceros. (LFPDPPP)
+    </div>
+    <button class="btn-next" id="btn0" disabled onclick="checkDuplicate()">Comenzar encuesta →</button>
+    <div id="loading0" class="loading" style="display:none">Verificando... un momento ⏳</div>
+  </div>
+
+  <!-- PASO 1: Calidad y sabor -->
+  <div class="step" id="s1">
+    <p class="q">¿Cómo calificarías la calidad y sabor de nuestros pollos y muslitos artesanales?</p>
+    <p class="hint">1 = Muy insatisfecho · 5 = Muy satisfecho</p>
+    <div class="stars" id="stars1"></div>
+    <p class="star-lbl" id="lbl1"></p>
+    <button class="btn-next" id="btn1" disabled onclick="goTo(2)">Siguiente →</button>
+  </div>
+
+  <!-- PASO 2: Tipo de pedido -->
+  <div class="step" id="s2">
+    <p class="q">¿Cómo realizaste tu pedido?</p>
+    <div class="opts" id="opts2">
+      <div class="opt" data-val="Mostrador">En mostrador</div>
+      <div class="opt" data-val="Domicilio">A domicilio</div>
+    </div>
+    <button class="btn-next" id="btn2" disabled onclick="goTo(3)">Siguiente →</button>
+    <button class="btn-back" onclick="goTo(1)">← Anterior</button>
+  </div>
+
+  <!-- PASO 3: Tiempo (condicional) -->
+  <div class="step" id="s3">
+    <p class="q" id="q3">¿Cómo calificarías el tiempo de espera?</p>
+    <p class="hint">1 = Muy insatisfecho · 5 = Muy satisfecho</p>
+    <div class="stars" id="stars3"></div>
+    <p class="star-lbl" id="lbl3"></p>
+    <button class="btn-next" id="btn3" disabled onclick="goTo(4)">Siguiente →</button>
+    <button class="btn-back" onclick="goTo(2)">← Anterior</button>
+  </div>
+
+  <!-- PASO 4: Atención -->
+  <div class="step" id="s4">
+    <p class="q">¿Cómo calificarías la amabilidad y atención de nuestro personal?</p>
+    <p class="hint">1 = Muy insatisfecho · 5 = Muy satisfecho</p>
+    <div class="stars" id="stars4"></div>
+    <p class="star-lbl" id="lbl4"></p>
+    <button class="btn-next" id="btn4" disabled onclick="goTo(5)">Siguiente →</button>
+    <button class="btn-back" onclick="goTo(3)">← Anterior</button>
+  </div>
+
+  <!-- PASO 5: Producto nuevo -->
+  <div class="step" id="s5">
+    <p class="q">¿Hay algún producto que te gustaría que agreguemos al menú?</p>
+    <p class="hint">Opcional — pero nos da ideas muy valiosas</p>
+    <textarea id="nuevoproducto" placeholder="Ej. alitas, ensalada, bebidas..."></textarea>
+    <button class="btn-next" onclick="goTo(6)">Siguiente →</button>
+    <button class="btn-back" onclick="goTo(4)">← Anterior</button>
+  </div>
+
+  <!-- PASO 6: ¿Cómo nos conociste? -->
+  <div class="step" id="s6">
+    <p class="q">¿Cómo nos conociste?</p>
+    <div class="opts" id="opts6">
+      <div class="opt" data-val="Recomendación">Recomendación de alguien</div>
+      <div class="opt" data-val="Redes sociales">Redes sociales</div>
+      <div class="opt" data-val="Pasé por el local">Pasé por el local</div>
+      <div class="opt" data-val="Google / internet">Google / internet</div>
+      <div class="opt" data-val="Cliente frecuente">Ya soy cliente frecuente</div>
+    </div>
+    <button class="btn-next" id="btn6" disabled onclick="goTo(7)">Siguiente →</button>
+    <button class="btn-back" onclick="goTo(5)">← Anterior</button>
+  </div>
+
+  <!-- PASO 7: NPS + comentario -->
+  <div class="step" id="s7">
+    <p class="q">¿Qué tan probable es que nos recomiendes a un amigo o familiar?</p>
+    <div class="nps-btns" id="nps"></div>
+    <div class="nps-labels"><span>Poco probable</span><span>Muy probable</span></div>
+    <p class="hint" style="margin-top:0.25rem">Comentario adicional (opcional)</p>
+    <textarea id="comentario" placeholder="¿Algo más que quieras contarnos?"></textarea>
+    <button class="btn-next" id="btn7" disabled onclick="submitEncuesta()">Enviar y obtener mi descuento 🎁</button>
+    <div id="loading7" class="loading" style="display:none">Guardando respuestas... ⏳</div>
+    <button class="btn-back" onclick="goTo(6)">← Anterior</button>
+  </div>
+
+  <!-- PANTALLA FINAL: cupón -->
+  <div class="step" id="s8">
+    <div class="coupon-screen">
+      <div class="check-icon">✅</div>
+      <p class="thanks-title">¡Gracias, <span id="nombre-final"></span>!</p>
+      <p class="thanks-sub">Tu opinión nos ayuda a mejorar cada día.</p>
+      <div class="coupon-box">
+        <div class="coupon-pct">10%</div>
+        <div class="coupon-desc">de descuento en tu próxima compra</div>
+      </div>
+      <div class="coupon-code-wrap">
+        Presenta este código al pagar
+        <span class="coupon-code" id="cupon-display">—</span>
+      </div>
+      <p class="coupon-note">Válido para una sola visita · No acumulable con otras promociones<br>El personal verificará el código en caja</p>
+      <a id="btn-whats" href="#" target="_blank" style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:1.25rem; padding:13px; background:#25d366; color:#fff; border-radius:10px; font-size:15px; font-weight:700; text-decoration:none;">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16 3C8.82 3 3 8.82 3 16c0 2.42.67 4.68 1.83 6.62L3 29l6.55-1.8A13 13 0 0 0 16 29c7.18 0 13-5.82 13-13S23.18 3 16 3zm0 23.8a10.77 10.77 0 0 1-5.5-1.5l-.39-.23-4.05 1.06 1.08-3.95-.26-.41A10.8 10.8 0 1 1 16 26.8zm5.93-8.1c-.32-.16-1.9-.94-2.2-1.04-.3-.11-.51-.16-.73.16-.21.32-.83 1.04-1.02 1.26-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.59-.95-.85-1.59-1.9-1.77-2.22-.19-.32-.02-.49.14-.65.14-.14.32-.37.48-.56.16-.19.21-.32.32-.53.11-.21.05-.4-.03-.56-.08-.16-.73-1.76-1-2.41-.26-.63-.53-.54-.73-.55h-.62c-.21 0-.56.08-.85.4-.29.32-1.12 1.09-1.12 2.66s1.15 3.09 1.31 3.3c.16.21 2.26 3.45 5.48 4.84.77.33 1.36.53 1.83.68.77.24 1.47.21 2.02.13.62-.09 1.9-.78 2.17-1.53.27-.75.27-1.4.19-1.53-.08-.13-.29-.21-.61-.37z"/></svg>
+        Enviarme el cupón por WhatsApp
+      </a>
+      <p style="font-size:11px; color:#ccc; margin-top:8px;">Al tocar el botón se abrirá WhatsApp con tu código listo para enviar</p>
+    </div>
+  </div>
+
+  <!-- YA RESPONDIÓ -->
+  <div class="step" id="s-dup">
+    <div style="text-align:center; padding:1.5rem 0;">
+      <div style="font-size:48px; margin-bottom:0.75rem;">🙌</div>
+      <p style="font-size:18px; font-weight:700; color:#1a1a1a; margin-bottom:0.5rem;">¡Ya nos diste tu opinión!</p>
+      <p style="font-size:14px; color:#888; margin-bottom:1.25rem;">Este número de WhatsApp ya completó la encuesta anteriormente. Tu cupón fue generado en esa ocasión.</p>
+      <p style="font-size:13px; color:#bbb;">¿Tienes dudas? Acércate al mostrador.</p>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCwvRTP0C2IrYk3sEwJI_8xbQgYYEKuO9w",
+    authDomain: "encuesta-pollo-mezquite.firebaseapp.com",
+    projectId: "encuesta-pollo-mezquite",
+    storageBucket: "encuesta-pollo-mezquite.firebasestorage.app",
+    messagingSenderId: "382903619275",
+    appId: "1:382903619275:web:16d23c305a691232c3d54e",
+    measurementId: "G-9Y091PD20Y"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const starLbls = ['','Muy insatisfecho','Insatisfecho','Regular','Satisfecho','Muy satisfecho'];
+  const ans = {};
+  const TOTAL = 7;
+
+  function genCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let c = 'MPM-';
+    for (let i = 0; i < 4; i++) c += chars[Math.floor(Math.random() * chars.length)];
+    return c;
+  }
+
+  function buildStars(id, key) {
+    const c = document.getElementById(id);
+    c.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      const s = document.createElement('span');
+      s.className = 'star';
+      s.textContent = '★';
+      s.onclick = () => {
+        ans[key] = i;
+        c.querySelectorAll('.star').forEach((x, j) => x.classList.toggle('on', j < i));
+        document.getElementById('lbl' + key).textContent = starLbls[i];
+        const b = document.getElementById('btn' + key);
+        if (b) b.disabled = false;
+      };
+      c.appendChild(s);
+    }
+  }
+
+  function setupOpts(id, btnId, key) {
+    document.getElementById(id).querySelectorAll('.opt').forEach(el => {
+      el.onclick = () => {
+        document.getElementById(id).querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+        el.classList.add('sel');
+        ans[key] = el.dataset.val;
+        if (btnId) document.getElementById(btnId).disabled = false;
+        if (id === 'opts2') {
+          document.getElementById('q3').textContent = ans.tipo_pedido === 'Domicilio'
+            ? '¿Qué tan satisfecho estás con el tiempo de entrega a domicilio?'
+            : '¿Cómo calificarías el tiempo de espera en mostrador?';
+          buildStars('stars3', '3');
+          delete ans['3'];
+          document.getElementById('btn3').disabled = true;
+          document.getElementById('lbl3').textContent = '';
+        }
+      };
+    });
+  }
+
+  function buildNPS() {
+    const c = document.getElementById('nps');
+    for (let i = 1; i <= 10; i++) {
+      const b = document.createElement('button');
+      b.className = 'nps-btn';
+      b.textContent = i;
+      b.onclick = () => {
+        c.querySelectorAll('.nps-btn').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+        ans.nps = i;
+        document.getElementById('btn7').disabled = false;
+      };
+      c.appendChild(b);
+    }
+  }
+
+  function setProgress(step) {
+    const pct = Math.round(step / TOTAL * 100);
+    document.getElementById('pbar').style.width = pct + '%';
+    document.getElementById('ptxt').textContent = step < TOTAL ? `Pregunta ${step} de ${TOTAL}` : 'Última pregunta';
+  }
+
+  window.goTo = (n) => {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('s' + n).classList.add('active');
+    if (n > 0 && n <= TOTAL) setProgress(n);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  window.checkReg = () => {
+    const nom = document.getElementById('nombre').value.trim();
+    const wa = document.getElementById('whatsapp').value.replace(/\D/g,'');
+    const promoSel = ans.acepta_promociones !== undefined;
+    document.getElementById('btn0').disabled = !(nom.length >= 2 && wa.length >= 10 && promoSel);
+  };
+
+  window.checkDuplicate = async () => {
+    const nom = document.getElementById('nombre').value.trim();
+    const wa = document.getElementById('whatsapp').value.replace(/\D/g,'');
+    if (nom.length < 2 || wa.length < 10) {
+      document.getElementById('err-reg').style.display = 'block';
+      return;
+    }
+    document.getElementById('err-reg').style.display = 'none';
+    document.getElementById('btn0').style.display = 'none';
+    document.getElementById('loading0').style.display = 'block';
+    ans.nombre = nom;
+    ans.whatsapp = wa;
+    try {
+      const ref = doc(db, 'clientes', wa);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        document.getElementById('loading0').style.display = 'none';
+        goTo('dup');
+      } else {
+        document.getElementById('loading0').style.display = 'none';
+        document.getElementById('btn0').style.display = 'block';
+        goTo(1);
+        setProgress(1);
+      }
+    } catch(e) {
+      document.getElementById('loading0').style.display = 'none';
+      document.getElementById('btn0').style.display = 'block';
+      goTo(1);
+      setProgress(1);
+    }
+  };
+
+  window.submitEncuesta = async () => {
+    ans.producto_nuevo = document.getElementById('nuevoproducto').value;
+    ans.comentario = document.getElementById('comentario').value;
+    document.getElementById('btn7').style.display = 'none';
+    document.getElementById('loading7').style.display = 'block';
+    const codigo = genCode();
+    try {
+      const clienteRef = doc(db, 'clientes', ans.whatsapp);
+      await setDoc(clienteRef, {
+        nombre: ans.nombre,
+        whatsapp: ans.whatsapp,
+        acepta_promociones: ans.acepta_promociones === 'true',
+        fecha_registro: serverTimestamp(),
+        cupon: codigo,
+        cupon_usado: false
+      });
+      await addDoc(collection(db, 'encuestas'), {
+        nombre: ans.nombre,
+        whatsapp: ans.whatsapp,
+        calidad_sabor: ans['1'] || null,
+        tipo_pedido: ans.tipo_pedido || null,
+        tiempo_espera: ans['3'] || null,
+        atencion: ans['4'] || null,
+        producto_nuevo: ans.producto_nuevo || '',
+        como_nos_conocio: ans.como_nos_conocio || '',
+        nps: ans.nps || null,
+        comentario: ans.comentario || '',
+        cupon: codigo,
+        fecha: serverTimestamp()
+      });
+      document.getElementById('cupon-display').textContent = codigo;
+      document.getElementById('nombre-final').textContent = ans.nombre.split(' ')[0];
+      const msg = encodeURIComponent(`Hola El Pollo Mezquite 🍗 Completé la encuesta de satisfacción. Mi código de descuento es: *${codigo}*`);
+      document.getElementById('btn-whats').href = `https://wa.me/528110108618?text=${msg}`;
+      document.getElementById('loading7').style.display = 'none';
+      document.getElementById('pbar').style.width = '100%';
+      document.getElementById('ptxt').textContent = '¡Completado!';
+      goTo(8);
+    } catch(e) {
+      document.getElementById('loading7').style.display = 'none';
+      document.getElementById('btn7').style.display = 'block';
+      alert('Hubo un error al guardar. Por favor intenta de nuevo.');
+    }
+  };
+
+  document.getElementById('opts-promo').querySelectorAll('.opt').forEach(el => {
+    el.onclick = () => {
+      document.getElementById('opts-promo').querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+      el.classList.add('sel');
+      ans.acepta_promociones = el.dataset.val;
+      window.checkReg();
+    };
+  });
+
+  setupOpts('opts2', 'btn2', 'tipo_pedido');
+  setupOpts('opts6', 'btn6', 'como_nos_conocio');
+  buildStars('stars1', '1');
+  buildStars('stars3', '3');
+  buildStars('stars4', '4');
+  buildNPS();
+
+  document.getElementById('btn1').disabled = true;
+  document.getElementById('btn3').disabled = true;
+  document.getElementById('btn4').disabled = true;
+</script>
+</body>
+</html>

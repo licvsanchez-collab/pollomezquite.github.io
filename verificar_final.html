@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Pollo Mezquite — Verificar cupón</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f0e8; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+.card { background: #fff; border-radius: 18px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); max-width: 420px; width: 100%; padding: 2rem; }
+.header { text-align: center; margin-bottom: 1.75rem; }
+.logo { width: 70px; height: 70px; border-radius: 50%; background: #b52a1c; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-size: 30px; }
+h1 { font-size: 19px; font-weight: 700; color: #b52a1c; margin-bottom: 4px; }
+.sub { font-size: 13px; color: #aaa; }
+.login-screen, .verify-screen { display: none; }
+.login-screen.active, .verify-screen.active { display: block; }
+label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
+input { width: 100%; padding: 11px 14px; border: 1.5px solid #e0d0c8; border-radius: 9px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fff; margin-bottom: 1rem; outline: none; transition: border-color 0.15s; }
+input:focus { border-color: #b52a1c; }
+.btn { width: 100%; padding: 13px; background: #b52a1c; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.15s; margin-bottom: 0.5rem; }
+.btn:hover { background: #951f14; }
+.btn:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
+.btn-sec { width: 100%; padding: 11px; background: #fff; color: #b52a1c; border: 1.5px solid #b52a1c; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-sec:hover { background: #fdf0ec; }
+.err { font-size: 13px; color: #b52a1c; text-align: center; margin-bottom: 0.75rem; display: none; }
+.result { border-radius: 14px; padding: 1.25rem; text-align: center; margin-bottom: 1.25rem; display: none; }
+.result.valid { background: #f0faf4; border: 2px solid #27ae60; }
+.result.used { background: #fff8f0; border: 2px solid #e67e22; }
+.result.invalid { background: #fff0f0; border: 2px solid #b52a1c; }
+.result-icon { font-size: 44px; margin-bottom: 0.5rem; }
+.result-title { font-size: 18px; font-weight: 700; margin-bottom: 0.4rem; }
+.result.valid .result-title { color: #1a7a3a; }
+.result.used .result-title { color: #b85c00; }
+.result.invalid .result-title { color: #b52a1c; }
+.result-info { font-size: 14px; color: #555; line-height: 1.6; }
+.result-info strong { color: #1a1a1a; }
+.code-input { font-size: 22px; letter-spacing: 4px; text-transform: uppercase; text-align: center; font-weight: 700; }
+.loading { text-align: center; padding: 1rem; color: #aaa; font-size: 14px; display: none; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-top: 6px; }
+.badge-ok { background: #d4f5e2; color: #1a7a3a; }
+.badge-used { background: #ffe8cc; color: #b85c00; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="logo">🍗</div>
+    <h1>El Pollo Mezquite</h1>
+    <p class="sub">Panel de verificación de cupones</p>
+  </div>
+
+  <div class="login-screen active" id="login">
+    <label>Contraseña del mostrador</label>
+    <input type="password" id="pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <p class="err" id="err-pwd">Contraseña incorrecta</p>
+    <button class="btn" onclick="doLogin()">Ingresar</button>
+  </div>
+
+  <div class="verify-screen" id="verify">
+    <label>Código del cupón</label>
+    <input type="text" id="codigo" class="code-input" placeholder="MPM-XXXX" maxlength="8" oninput="formatCode(this)" onkeydown="if(event.key==='Enter')verificar()">
+    <p class="err" id="err-cod">Ingresa un código válido (MPM-XXXX)</p>
+    <div id="resultado" class="result"></div>
+    <div id="loading" class="loading">Verificando... ⏳</div>
+    <button class="btn" id="btn-verificar" onclick="verificar()">Verificar cupón</button>
+    <button class="btn-sec" id="btn-canjear" style="display:none; margin-top:0.5rem" onclick="canjear()">✅ Marcar como canjeado</button>
+    <button class="btn-sec" style="margin-top:0.5rem" onclick="resetForm()">Verificar otro código</button>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCwvRTP0C2IrYk3sEwJI_8xbQgYYEKuO9w",
+    authDomain: "encuesta-pollo-mezquite.firebaseapp.com",
+    projectId: "encuesta-pollo-mezquite",
+    storageBucket: "encuesta-pollo-mezquite.firebasestorage.app",
+    messagingSenderId: "382903619275",
+    appId: "1:382903619275:web:16d23c305a691232c3d54e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const PASSWORD = "pollo2025";
+  let currentClienteId = null;
+
+  window.doLogin = () => {
+    if (document.getElementById('pwd').value === PASSWORD) {
+      document.getElementById('login').classList.remove('active');
+      document.getElementById('verify').classList.add('active');
+      document.getElementById('err-pwd').style.display = 'none';
+    } else {
+      document.getElementById('err-pwd').style.display = 'block';
+    }
+  };
+
+  window.formatCode = (el) => {
+    let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3,7);
+    el.value = v;
+  };
+
+  window.verificar = async () => {
+    const cod = document.getElementById('codigo').value.trim().toUpperCase();
+    if (!/^MPM-[A-Z0-9]{4}$/.test(cod)) {
+      document.getElementById('err-cod').style.display = 'block';
+      return;
+    }
+    document.getElementById('err-cod').style.display = 'none';
+    document.getElementById('resultado').style.display = 'none';
+    document.getElementById('btn-canjear').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('btn-verificar').disabled = true;
+    currentClienteId = null;
+    try {
+      const q = query(collection(db, 'clientes'), where('cupon', '==', cod));
+      const snap = await getDocs(q);
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('btn-verificar').disabled = false;
+      const res = document.getElementById('resultado');
+      if (snap.empty) {
+        res.className = 'result invalid';
+        res.innerHTML = `<div class="result-icon">❌</div><p class="result-title">Cupón no encontrado</p><p class="result-info">El código <strong>${cod}</strong> no existe en el sistema.</p>`;
+        res.style.display = 'block';
+      } else {
+        const d = snap.docs[0].data();
+        currentClienteId = snap.docs[0].id;
+        if (d.cupon_usado) {
+          res.className = 'result used';
+          res.innerHTML = `<div class="result-icon">⚠️</div><p class="result-title">Cupón ya utilizado</p><p class="result-info">Cliente: <strong>${d.nombre}</strong><br>WhatsApp: ${d.whatsapp}<br><span class="badge badge-used">Ya canjeado</span></p>`;
+          res.style.display = 'block';
+        } else {
+          res.className = 'result valid';
+          res.innerHTML = `<div class="result-icon">✅</div><p class="result-title">Cupón válido</p><p class="result-info">Cliente: <strong>${d.nombre}</strong><br>WhatsApp: ${d.whatsapp}<br><span class="badge badge-ok">Disponible · 10% de descuento</span></p>`;
+          res.style.display = 'block';
+          document.getElementById('btn-canjear').style.display = 'block';
+        }
+      }
+    } catch(e) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('btn-verificar').disabled = false;
+      alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
+    }
+  };
+
+  window.canjear = async () => {
+    if (!currentClienteId) return;
+    document.getElementById('btn-canjear').disabled = true;
+    try {
+      await updateDoc(doc(db, 'clientes', currentClienteId), { cupon_usado: true });
+      const res = document.getElementById('resultado');
+      res.className = 'result used';
+      res.innerHTML = `<div class="result-icon">🎉</div><p class="result-title">¡Cupón canjeado!</p><p class="result-info">Se aplicó el 10% de descuento.<br>El cupón ha sido marcado como utilizado.</p>`;
+      document.getElementById('btn-canjear').style.display = 'none';
+    } catch(e) {
+      document.getElementById('btn-canjear').disabled = false;
+      alert('Error al canjear. Intenta de nuevo.');
+    }
+  };
+
+  window.resetForm = () => {
+    document.getElementById('codigo').value = '';
+    document.getElementById('resultado').style.display = 'none';
+    document.getElementById('btn-canjear').style.display = 'none';
+    document.getElementById('err-cod').style.display = 'none';
+    currentClienteId = null;
+  };
+</script>
+</body>
+</html>
